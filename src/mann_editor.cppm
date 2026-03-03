@@ -1,7 +1,14 @@
-// PURPOSE:
+// PURPOSE: Handle the logic of the editor.
 //
+// CLASSES:
+//  Editor: Top level class which handles the logic of the editor.
 // DESCRIPTION:
-//
+//  
+// 
+// TODO:
+//  Right now there are some functionalities that I think should be moved 
+//  to a lower layer in the architecture, for example the primitive of refresh
+//  screen and drawing.
 
 module;
 

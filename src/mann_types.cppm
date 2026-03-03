@@ -1,6 +1,4 @@
-// PURPOSE:
-//
-// 
+// PURPOSE: Define basic types in an explicit way for bit dimension.
 
 export module mann.types;
 

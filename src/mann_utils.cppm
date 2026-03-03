@@ -1,4 +1,4 @@
-// PURPOSE:
+// PURPOSE: Define some utility functions.
 //
 // DESCRIPTIONS:
 //
@@ -11,6 +11,7 @@ import mann.types;
 
 namespace mann {
 
+// Convert an ascii character to its representation with ctrl combo.
 export
 inline constexpr auto ctrl_key(const i8 c) -> i8 {
     // In the terminal, the ctrl key strips bit 5 and 6. 

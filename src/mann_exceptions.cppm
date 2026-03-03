@@ -7,7 +7,10 @@
 //  This module defines exceptions and errors that could arises in the application.
 //  Note that error_code are not mutually exclusives with exceptions; they are used as a
 //  low level interfaces with C errors like returned from low level OS fuctions.
-//
+//  Inside the editor library, the primary resource used for dealing with error is std::expected with
+//  InfoError. The exception pattern is used to quit the editor and cleanup the resources with the stack
+//  unwinding mechanism. This could be done explicitily by raising QuitProgramError or by calling the die() function.
+
 module;
 
 #include <cerrno>
@@ -60,6 +63,8 @@ auto die(const std::string_view error) -> void {
     throw std::runtime_error{"application died"};
 }
 
+// Fatal error, signal the error and throw an exception to unwind the stack
+// and clean the resources.
 [[noreturn]]
 auto die(const InfoError& e) -> void {
     clear_and_reset_cursor();

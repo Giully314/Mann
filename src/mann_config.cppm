@@ -1,9 +1,12 @@
-// PURPOSE:
+// PURPOSE: Handle editor configuration.
 //
 // CLASSES:
+//  EditorConfig: Configuration class for the editor.
 //
 // DESCRIPTION:
-//  
+//  This module manages the interactions with the low level routines offered by
+//  the system to set and retrieve terminal informations. For example setting 
+//  raw mode, retrieve number of columns and rows.
 
 module;
 
