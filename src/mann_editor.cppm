@@ -53,29 +53,38 @@ private:
     auto process_keypress() const -> void {
         switch (auto c = read_key(); c) {
         case ctrl_key('q'):
-            clear_and_reset_cursor();
+            // clear_and_reset_cursor(buffer);
             // We should throw here to cleanup all the RAII.
             throw QuitProgramError{"quit"};
         }
     }
 
-    auto draw_rows() const -> void {
+    auto draw_rows() -> void {
         for (auto y = 0; y < config.height() - 1; ++y) {
-            write(STDOUT_FILENO, "~\r\n", 3);
+            buffer.append(esc::erase_line);
+            buffer.append("~\r\n");
         }
-        write(STDOUT_FILENO, "~", 1);
+        buffer.push_back('~');
     }
 
-    auto refresh_screen() const -> void {
-        clear_and_reset_cursor();
-        draw_rows();
+    auto refresh_screen() -> void {
+        buffer.append(esc::hide_cursor);
+        buffer.append(esc::upper_left_cursor);
 
-        write(STDOUT_FILENO, esc_seq_upper_left_cursor.data(), esc_seq_upper_left_cursor.size());
+        draw_rows();
+        
+        buffer.append(esc::show_cursor);
+        buffer.append(esc::upper_left_cursor);
+
+        write(STDOUT_FILENO, buffer.data(), buffer.size());
+        buffer.clear();
+        // TODO: Should we also resize the buffer to 0? 
     }
 
 
 private:
     EditorConfig config;
+    std::string buffer;
 };
 
 } // namespace mann
