@@ -16,17 +16,22 @@ import mann.exceptions;
 
 export namespace mann {
 
-enum class PlatformConsoleError {
+enum class PlatformTerminalError {
     // Error while trying to get window size.
     WindowSize=1,
+    CursorPosition,
 };
 
 
 // Return a pair where the first element is the width, the second element the height.
-// Can throw an exception if ioctl returns errors.
+// In case of an error, return InfoError with the error condition.
 auto get_window_size() -> std::expected<std::pair<i32, i32>, InfoError>;
+
+// Return a pair where the first element is the row, the second element the col.
+// In case of an error, return InfoError with the error condition.
+auto get_cursor_position() -> std::expected<std::pair<i32, i32>, InfoError>;
     
 } // namespace mann
 
-CUSTOM_ERROR_CODE_DECLARATION(mann, PlatformConsoleError)
+CUSTOM_ERROR_CODE_DECLARATION(mann, PlatformTerminalError)
 

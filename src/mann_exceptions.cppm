@@ -31,6 +31,7 @@ InputInvalid = 1,
 WindowSize,
 Unknown,
 IllegalAction,
+Cursor,
 };
 
 std::error_condition make_error_condition(NormalizedError e);
