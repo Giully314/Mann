@@ -60,9 +60,10 @@ private:
     }
 
     auto draw_rows() const -> void {
-        for (auto y = 0; y < config.height(); ++y) {
+        for (auto y = 0; y < config.height() - 1; ++y) {
             write(STDOUT_FILENO, "~\r\n", 3);
         }
+        write(STDOUT_FILENO, "~", 1);
     }
 
     auto refresh_screen() const -> void {
