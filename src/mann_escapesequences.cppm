@@ -21,6 +21,10 @@ namespace esc {
 // https://vt100.net/docs/vt100-ug/chapter3.html#CUP
 inline constexpr std::string_view upper_left_cursor = "\x1b[H";
 
+// Formatted string for moving the cursor. Must be used with std::format to insert the right values.
+inline constexpr std::string_view move_cursor = "\x1b[{};{}H";
+
+
 // Escape sequence to erase all the characters.
 // 0 (default): erase from active position to the end of the screen inclusive.
 // https://vt100.net/docs/vt100-ug/chapter3.html#ED 
@@ -36,6 +40,8 @@ inline constexpr std::string_view show_cursor = "\x1b[?25h";
 // Default argument is 0 which is erase the line at the right of the cursor.
 // https://vt100.net/docs/vt100-ug/chapter3.html#EL
 inline constexpr std::string_view erase_line = "\x1b[K";
+
+
 
 } // namespace esc
 } // namespace mann
