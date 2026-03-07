@@ -28,6 +28,27 @@ import mann.escape_sequences;
 
 namespace mann {
 
+enum class KeyType : u8 {
+    // The keycode must be interpreted as a part of an escape sequence.
+    EscapeSequence,
+    // The keycode represent a key pressed by the user.
+    Plain,
+};
+
+
+struct Key {
+    const i8 key;
+    const KeyType type;
+
+    static constexpr auto plain(const i8 c) -> Key {
+        return Key{c, KeyType::Plain};
+    }
+
+    static constexpr auto esc_seq(const i8 c) -> Key {
+        return Key{c, KeyType::EscapeSequence};
+    }
+}; 
+
 export 
 class Editor final {
 public:
@@ -38,7 +59,7 @@ public:
     }
 
 private:
-    auto read_key() const -> i8 {
+    auto read_key() const -> Key {
         i8 c{};
         auto nread = read(STDIN_FILENO, &c, 1);
 
@@ -47,15 +68,61 @@ private:
                 die("read");
             }
         }
-        return c;
+        
+        // Check if the current character is the start of an escape sequence
+        // to be processed by the editor "\x1b[".
+        if (c == '\x1b') {
+            i8 seq[3];
+
+            if (read(STDIN_FILENO, &seq[0], 1) != 1 ) {
+                return Key::plain('\x1b');
+            }
+            if (read(STDIN_FILENO, &seq[1], 1) != 1) {
+                return Key::plain('\x1b');
+            }
+
+            // Check escape sequence for key arrows.
+            if (seq[0] == '[') {
+                return Key::esc_seq(seq[1]);
+            }
+        }
+
+        return Key::plain(c);
     }
 
-    auto process_keypress() const -> void {
-        switch (auto c = read_key(); c) {
+    auto process_keypress() -> void {
+        auto c = read_key();
+
+        if (c.type == KeyType::EscapeSequence) {
+            process_escape_sequence(c.key);    
+        } else if (c.type == KeyType::Plain) {
+            process_plain(c.key);
+        }
+    }
+
+    auto process_plain(const i8 c) -> void {
+        switch (c) {
         case ctrl_key('q'):
-            // clear_and_reset_cursor(buffer);
-            // We should throw here to cleanup all the RAII.
+            // We should throw here to cleanup all with RAII.
+            clear_and_reset_cursor();
             throw QuitProgramError{"quit"};
+        }
+    }
+
+    auto process_escape_sequence(const i8 c) -> void {
+        switch (c) {
+        case 'D': // Left arrow 
+            cx = std::max(0, cx-1);
+            break;
+        case 'C': // Right arrow 
+            cx = std::min(cx+1, config.width());
+            break;
+        case 'A': // Up arrow 
+            cy = std::max(0, cy-1);
+            break;
+        case 'B': // Down arrow
+            cy = std::min(cy+1, config.height());
+            break;
         }
     }
 
@@ -73,18 +140,39 @@ private:
 
         draw_rows();
         
+        buffer.append(std::format(esc::move_cursor, cy+1, cx+1));
         buffer.append(esc::show_cursor);
-        buffer.append(esc::upper_left_cursor);
 
         write(STDOUT_FILENO, buffer.data(), buffer.size());
         buffer.clear();
         // TODO: Should we also resize the buffer to 0? 
     }
 
+    auto move_cursor(const i8 key) -> void {
+        switch (key) {
+            case 'D':
+                cx = std::max(0, cx-1);
+                break;
+            case 'C':
+                cx = std::min(cx+1, config.width());
+                break;
+            case 'B':
+                cy = std::max(0, cy-1);
+                break;
+            case 'A':
+                cy = std::min(cy+1, config.height());
+                break;
+        }
+    }
+
 
 private:
     EditorConfig config;
     std::string buffer;
+
+    // Cursor coordinates.
+    i32 cx{0};
+    i32 cy{0};
 };
 
 } // namespace mann
