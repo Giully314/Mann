@@ -80,9 +80,28 @@ private:
             if (read(STDIN_FILENO, &seq[1], 1) != 1) {
                 return Key::plain('\x1b');
             }
+            
+            if (seq[0] == '[') {    
+                // This piece of code lose information if done in this way. 
+                // There are 2 options (that comes in my mind right now):
+                // Return the seq[1:2] to be then interpreted by process_escape_sequence
+                // or assume that we can do some 'initial parsing' without lose of information
+                // like reading '~' and return just the number. But what is there are other commands 
+                // with the same numbers? 
+                // The following code has some useless checks that can be simplified when a decision is made.
 
-            // Check escape sequence for key arrows.
-            if (seq[0] == '[') {
+                // Check for page up/down.
+                if (seq[1] >= '0' && seq[1] <= '9') {
+                    if (read(STDIN_FILENO, &seq[2], 1) != 1) {
+                        return Key::plain(c);
+                    }
+                    
+
+                    // It is a page up/down.
+                    if (seq[2] == '~') {
+                        return Key::esc_seq(seq[1]);
+                    }
+                }
                 return Key::esc_seq(seq[1]);
             }
         }
@@ -111,17 +130,26 @@ private:
 
     auto process_escape_sequence(const i8 c) -> void {
         switch (c) {
+
         case 'D': // Left arrow 
             cx = std::max(0, cx-1);
             break;
         case 'C': // Right arrow 
-            cx = std::min(cx+1, config.width());
+            cx = std::min(cx+1, config.width() - 1);
             break;
         case 'A': // Up arrow 
             cy = std::max(0, cy-1);
             break;
         case 'B': // Down arrow
-            cy = std::min(cy+1, config.height());
+            cy = std::min(cy+1, config.height() - 1);
+            break;
+        
+        // Temporary, right now the screen is fixed, so we just move the cursor at top or bottom of the current window.
+        case '5': // Page up
+            cy = 0;
+            break;
+        case '6': // Page down
+            cy = config.height() - 1;
             break;
         }
     }
@@ -146,23 +174,6 @@ private:
         write(STDOUT_FILENO, buffer.data(), buffer.size());
         buffer.clear();
         // TODO: Should we also resize the buffer to 0? 
-    }
-
-    auto move_cursor(const i8 key) -> void {
-        switch (key) {
-            case 'D':
-                cx = std::max(0, cx-1);
-                break;
-            case 'C':
-                cx = std::min(cx+1, config.width());
-                break;
-            case 'B':
-                cy = std::max(0, cy-1);
-                break;
-            case 'A':
-                cy = std::min(cy+1, config.height());
-                break;
-        }
     }
 
 
