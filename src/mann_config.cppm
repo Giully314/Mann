@@ -62,12 +62,12 @@ struct EditorConfig {
     }
 
     // Return the width in number of character.
-    auto width() const noexcept -> i32 {
+    auto width() const noexcept -> u32 {
         return screen_cols;
     }
 
     // Return the height in number of character.
-    auto height() const noexcept -> i32 {
+    auto height() const noexcept -> u32 {
         return screen_rows;
     }
 
@@ -111,8 +111,8 @@ private:
     }
 
 private:
-    i32 screen_rows;
-    i32 screen_cols;
+    u32 screen_rows;
+    u32 screen_cols;
 
     // Save the original settings to be restored at exit of the 
     // application.

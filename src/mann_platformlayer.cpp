@@ -50,7 +50,7 @@ CUSTOM_ERROR_CODE_DEFINITION(mann, PlatformTerminalError, platform_error_categor
 
 namespace mann {
     
-auto get_window_size() -> std::expected<std::pair<i32, i32>, InfoError> {
+auto get_window_size() -> std::expected<std::pair<u32, u32>, InfoError> {
     winsize ws;
 
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
@@ -65,14 +65,14 @@ auto get_window_size() -> std::expected<std::pair<i32, i32>, InfoError> {
         }
 
         const auto& [r, c] = e.value();
-        return std::expected<std::pair<i32, i32>, InfoError>{std::in_place, c, r};
+        return std::expected<std::pair<u32, u32>, InfoError>{std::in_place, c, r};
     } else {
-        return std::expected<std::pair<i32, i32>, InfoError>{std::in_place, ws.ws_col, ws.ws_row};
+        return std::expected<std::pair<u32, u32>, InfoError>{std::in_place, ws.ws_col, ws.ws_row};
     }
 }
 
 
-auto get_cursor_position() -> std::expected<std::pair<i32, i32>, InfoError> {
+auto get_cursor_position() -> std::expected<std::pair<u32, u32>, InfoError> {
     // n command is device status report, used to query for terminal informations.
     // The argument 6 is used to ask for cursor position.
     if (write(STDOUT_FILENO, "\x1b[6n", 4) != 4) {
@@ -87,7 +87,7 @@ auto get_cursor_position() -> std::expected<std::pair<i32, i32>, InfoError> {
     u32 row, col;
     std::cin >> esc >> bracket >> row >> trash >> col >> trash;
 
-    return std::expected<std::pair<i32, i32>, InfoError>{std::in_place, row, col};
+    return std::expected<std::pair<u32, u32>, InfoError>{std::in_place, row, col};
 }
 
 } // namespace mann 

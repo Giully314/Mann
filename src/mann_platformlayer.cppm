@@ -25,11 +25,11 @@ enum class PlatformTerminalError {
 
 // Return a pair where the first element is the width, the second element the height.
 // In case of an error, return InfoError with the error condition.
-auto get_window_size() -> std::expected<std::pair<i32, i32>, InfoError>;
+auto get_window_size() -> std::expected<std::pair<u32, u32>, InfoError>;
 
 // Return a pair where the first element is the row, the second element the col.
 // In case of an error, return InfoError with the error condition.
-auto get_cursor_position() -> std::expected<std::pair<i32, i32>, InfoError>;
+auto get_cursor_position() -> std::expected<std::pair<u32, u32>, InfoError>;
     
 } // namespace mann
 
