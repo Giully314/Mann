@@ -53,6 +53,11 @@ export
 class Editor final {
 public:
 
+    Editor() = default;
+
+    Editor(const std::filesystem::path& path) : rows{read_file(path)} { }
+
+
     auto run() -> void {
         refresh_screen();
         process_keypress();
@@ -89,6 +94,8 @@ private:
                 // like reading '~' and return just the number. But what is there are other commands 
                 // with the same numbers? 
                 // The following code has some useless checks that can be simplified when a decision is made.
+                // Another thing that can be made, is to just remap the key to something else in the range of an ascii code;
+                // because we have the additional information if it is an escape seq or not, there is no conflict during dispatch.
 
                 // Check for page up/down.
                 if (seq[1] >= '0' && seq[1] <= '9') {
@@ -96,7 +103,6 @@ private:
                         return Key::plain(c);
                     }
                     
-
                     // It is a page up/down.
                     if (seq[2] == '~') {
                         return Key::esc_seq(seq[1]);
@@ -132,18 +138,62 @@ private:
         switch (c) {
 
         case 'D': // Left arrow 
-            cx = std::max(0, cx-1);
+            if (cx > 0) {
+                --cx;
+            } else {
+                if (col_offset > 0) {
+                    --col_offset;
+                }
+            }
             break;
         case 'C': // Right arrow 
-            cx = std::min(cx+1, config.width() - 1);
+            if (cx < config.width() - 1) {
+                ++cx;
+            } else {
+                // Here we should check on maximum len of the rows.
+                ++col_offset;   
+            }
             break;
         case 'A': // Up arrow 
-            cy = std::max(0, cy-1);
+            if (cy > 0) {
+                --cy;
+            } else {
+                if (row_offset > 0) {
+                    --row_offset;
+                }
+            }
             break;
         case 'B': // Down arrow
-            cy = std::min(cy+1, config.height() - 1);
+            if (cy < config.height() - 1) {
+                ++cy;
+            } else {
+                // Technically this should be rows.size() - config.height() but this 
+                // should be done by first checking if rows.size() > config.height().
+                if (row_offset < rows.size()) {
+                    ++row_offset;
+                }
+            }
             break;
         
+        // Home key
+        case '1':
+        case '7':
+        case 'H':
+            cx = 0;
+            break;
+
+        // Delete key
+        case '3':
+            break;
+
+        // End key
+        case '4':
+        case '8':
+        case 'F':
+            cx = config.width() - 1;
+            break;
+            
+
         // Temporary, right now the screen is fixed, so we just move the cursor at top or bottom of the current window.
         case '5': // Page up
             cy = 0;
@@ -155,11 +205,24 @@ private:
     }
 
     auto draw_rows() -> void {
-        for (auto y = 0; y < config.height() - 1; ++y) {
+        for (u32 y = 0; y < config.height(); ++y) {
+            const auto filerow = y + row_offset;
+            if (filerow >= rows.size()) {
+                buffer.append("~");
+            } else {
+                u32 len = static_cast<u32>(rows[filerow].size());
+                if (len > config.width()) {
+                    len = config.width();
+                }
+                const auto start = std::min(col_offset, len);
+                buffer.append(rows[filerow], start, len);
+            }
+            
             buffer.append(esc::erase_line);
-            buffer.append("~\r\n");
+            if (y < config.height() - 1) {
+                buffer.append("\r\n");
+            }
         }
-        buffer.push_back('~');
     }
 
     auto refresh_screen() -> void {
@@ -179,11 +242,22 @@ private:
 
 private:
     EditorConfig config;
+
+    // Data content to be displayed at each frame.
     std::string buffer;
 
+    // A rows of text used for tests.
+    std::vector<std::string> rows{"Hello world."};
+
     // Cursor coordinates.
-    i32 cx{0};
-    i32 cy{0};
+    u32 cx{0};
+    u32 cy{0};
+
+    // Used to keep track of the vertical scrolling.
+    u32 row_offset{0};
+
+    // Used to keep track of horizontal scrolling.
+    u32 col_offset{0};
 };
 
 } // namespace mann
